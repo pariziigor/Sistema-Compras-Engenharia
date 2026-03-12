@@ -6,7 +6,6 @@ import io
 
 app = FastAPI(title="API Compras e Engenharia")
 
-# Configuração de CORS: Permite que o front-end (React) faça requisições para esta API
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"], 
@@ -15,10 +14,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Função auxiliar para conectar ao banco
 def get_db_connection():
     conn = sqlite3.connect('compras_engenharia.db')
-    conn.row_factory = sqlite3.Row # Permite acessar as colunas pelo nome
+    conn.row_factory = sqlite3.Row 
     return conn
 
 @app.get("/")
@@ -35,14 +33,11 @@ async def upload_estoque(file: UploadFile = File(...)):
         raise HTTPException(status_code=400, detail="Formato inválido. Por favor, envie um arquivo Excel (.xlsx ou .xls).")
 
     try:
-        # Lê o arquivo Excel em memória usando Pandas
         contents = await file.read()
         df = pd.read_excel(io.BytesIO(contents))
         
-        # Padroniza os nomes das colunas para evitar erros de digitação na planilha
         df.columns = df.columns.str.strip().str.lower()
         
-        # Verifica se as colunas necessárias existem
         colunas_necessarias = ['codigo_material', 'descricao', 'quantidade_estoque', 'quantidade_comprada']
         for col in colunas_necessarias:
             if col not in df.columns:
@@ -51,30 +46,27 @@ async def upload_estoque(file: UploadFile = File(...)):
         conn = get_db_connection()
         cursor = conn.cursor()
 
-        # Itera sobre as linhas da planilha
         for index, row in df.iterrows():
-            # 1. Garante que o material existe no catálogo (Tabela Materiais)
+            valor_unidade = row.get('unidade_medida', 'UN')
+            if pd.isna(valor_unidade) or str(valor_unidade).strip() == '':
+                unidade = 'UN'
+            else:
+                unidade = str(valor_unidade).strip().upper()
+            
             cursor.execute('''
-                INSERT OR IGNORE INTO Materiais (codigo_material, descricao)
-                VALUES (?, ?)
-            ''', (str(row['codigo_material']), str(row['descricao'])))
-
-            # 2. Atualiza ou insere as quantidades no Estoque (Tabela Estoque_Compras)
-            cursor.execute('''
-                INSERT INTO Estoque_Compras (codigo_material, quantidade_estoque, quantidade_comprada)
+                INSERT INTO Materiais (codigo_material, descricao, unidade_medida)
                 VALUES (?, ?, ?)
                 ON CONFLICT(codigo_material) DO UPDATE SET
-                    quantidade_estoque=excluded.quantidade_estoque,
-                    quantidade_comprada=excluded.quantidade_comprada,
-                    data_atualizacao=CURRENT_TIMESTAMP
-            ''', (str(row['codigo_material']), float(row['quantidade_estoque']), float(row['quantidade_comprada'])))
+                    descricao=excluded.descricao,
+                    unidade_medida=excluded.unidade_medida
+            ''', (str(row['codigo_material']), str(row['descricao']), unidade))
 
         conn.commit()
         return {"mensagem": f"Sucesso! {len(df)} itens de estoque foram atualizados."}
 
     except Exception as e:
         if 'conn' in locals():
-            conn.rollback() # Desfaz as alterações se der erro
+            conn.rollback()
         raise HTTPException(status_code=500, detail=f"Erro ao processar o arquivo: {str(e)}")
     finally:
         if 'conn' in locals():
@@ -102,7 +94,6 @@ async def upload_engenharia(file: UploadFile = File(...)):
         conn = get_db_connection()
         cursor = conn.cursor()
 
-        # Agrupa os dados por projeto para processar um projeto por vez
         projetos_agrupados = df.groupby('codigo_projeto')
         projetos_processados = 0
         projetos_alterados = 0
@@ -111,22 +102,18 @@ async def upload_engenharia(file: UploadFile = File(...)):
             projeto_str = str(projeto)
             projetos_processados += 1
             
-            # Verifica se o projeto já existe no banco
             cursor.execute("SELECT * FROM Projetos WHERE codigo_projeto = ?", (projeto_str,))
             projeto_db = cursor.fetchone()
             
             mudancas = []
             
             if not projeto_db:
-                # 1. PROJETO NOVO: Insere na tabela de Projetos
                 cursor.execute("INSERT INTO Projetos (codigo_projeto) VALUES (?)", (projeto_str,))
                 
-                # Insere os materiais pedidos para esse novo projeto
                 for _, row in itens.iterrows():
                     mat = str(row['codigo_material'])
                     qtd = float(row['quantidade_pedida'])
                     
-                    # Garante que o material exista no catálogo para não dar erro de chave estrangeira
                     cursor.execute("INSERT OR IGNORE INTO Materiais (codigo_material, descricao) VALUES (?, ?)", (mat, "Descrição pendente"))
                     
                     cursor.execute('''
@@ -134,12 +121,10 @@ async def upload_engenharia(file: UploadFile = File(...)):
                         VALUES (?, ?, ?)
                     ''', (projeto_str, mat, qtd))
             else:
-                # 2. PROJETO EXISTENTE: Vamos comparar para ver se houve alteração (Versionamento)
                 for _, row in itens.iterrows():
                     mat = str(row['codigo_material'])
                     nova_qtd = float(row['quantidade_pedida'])
                     
-                    # Busca a quantidade antiga que estava no banco
                     cursor.execute('''
                         SELECT quantidade_pedida FROM Necessidade_Projeto 
                         WHERE codigo_projeto = ? AND codigo_material = ?
@@ -147,7 +132,6 @@ async def upload_engenharia(file: UploadFile = File(...)):
                     necessidade_db = cursor.fetchone()
                     
                     if not necessidade_db:
-                        # Engenharia adicionou um material novo que não estava na versão anterior
                         mudancas.append(f"Novo material adicionado: {mat} ({nova_qtd})")
                         cursor.execute("INSERT OR IGNORE INTO Materiais (codigo_material, descricao) VALUES (?, ?)", (mat, "Descrição pendente"))
                         cursor.execute('''
@@ -156,7 +140,6 @@ async def upload_engenharia(file: UploadFile = File(...)):
                         ''', (projeto_str, mat, nova_qtd))
                         
                     elif necessidade_db['quantidade_pedida'] != nova_qtd:
-                        # Engenharia alterou a quantidade de um material existente
                         qtd_antiga = necessidade_db['quantidade_pedida']
                         mudancas.append(f"Material {mat} alterado de {qtd_antiga} para {nova_qtd}")
                         cursor.execute('''
@@ -164,19 +147,16 @@ async def upload_engenharia(file: UploadFile = File(...)):
                             WHERE codigo_projeto = ? AND codigo_material = ?
                         ''', (nova_qtd, projeto_str, mat))
                 
-                # Se registra alguma mudança, atualiza a versão do projeto
                 if mudancas:
                     projetos_alterados += 1
-                    descricao_completa = " | ".join(mudancas) # Junta todas as mudanças em um texto só
+                    descricao_completa = " | ".join(mudancas)
                     
-                    # Altera o status, sobe a versão e atualiza a data
                     cursor.execute('''
                         UPDATE Projetos 
                         SET versao = versao + 1, status = 'Alterado', ultima_alteracao = CURRENT_TIMESTAMP 
                         WHERE codigo_projeto = ?
                     ''', (projeto_str,))
                     
-                    # Salva no histórico para visualização futura no React
                     cursor.execute('''
                         INSERT INTO Historico_Alteracoes (codigo_projeto, descricao_mudanca) 
                         VALUES (?, ?)
@@ -204,7 +184,6 @@ def listar_projetos():
     conn = get_db_connection()
     cursor = conn.cursor()
     
-    # Puxa os dados principais dos projetos (Abertos, Fechados, Alterados)
     cursor.execute('''
         SELECT codigo_projeto, status, data_criacao, ultima_alteracao, versao 
         FROM Projetos
@@ -212,7 +191,6 @@ def listar_projetos():
     ''')
     projetos = [dict(row) for row in cursor.fetchall()]
     
-    # Para cada projeto, já enviamos o histórico junto para quando o usuário clicar no card
     for proj in projetos:
         cursor.execute('''
             SELECT data_alteracao, descricao_mudanca 
@@ -234,12 +212,12 @@ def calcular_necessidades_compras():
     conn = get_db_connection()
     cursor = conn.cursor()
     
-    # Esta query soma tudo que a engenharia pediu de um material em todos os projetos,
-    # subtrai o que já temos e filtra apenas os resultados maiores que zero.
     cursor.execute('''
         SELECT 
             n.codigo_material,
             m.descricao,
+            IFNULL(m.unidade_medida, '-') as unidade_medida,
+            SUM(n.quantidade_pedida) as demanda_total_obras,
             SUM(n.quantidade_pedida) as demanda_total_obras,
             IFNULL(e.quantidade_estoque, 0) as estoque_atual,
             IFNULL(e.quantidade_comprada, 0) as pedidos_colocados,

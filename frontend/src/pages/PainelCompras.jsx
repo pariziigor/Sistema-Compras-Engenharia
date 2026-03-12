@@ -48,6 +48,7 @@ export default function PainelCompras() {
             <tr className="bg-slate-50 border-b border-slate-200">
               <th className="p-4 font-medium text-slate-600 w-32">Código</th>
               <th className="p-4 font-medium text-slate-600">Descrição do Material</th>
+              <th className="p-4 font-medium text-slate-600 text-center w-16">UN</th>
               <th className="p-4 font-medium text-slate-600 text-center">Demanda (Obras)</th>
               <th className="p-4 font-medium text-slate-600 text-center">Estoque Atual</th>
               <th className="p-4 font-medium text-slate-600 text-center">Pedidos Colocados</th>
@@ -66,7 +67,7 @@ export default function PainelCompras() {
                 <tr key={index} className="border-b border-slate-100 hover:bg-slate-50">
                   <td className="p-4 font-mono text-sm text-slate-500">{item.codigo_material}</td>
                   <td className="p-4 font-medium text-slate-800">{item.descricao}</td>
-                  
+                  <td className="p-4 text-center font-semibold text-slate-500">{item.unidade_medida}</td>
                   <td className="p-4 text-center">{item.demanda_total_obras}</td>
                   <td className="p-4 text-center text-emerald-600">{item.estoque_atual}</td>
                   <td className="p-4 text-center text-blue-600">{item.pedidos_colocados}</td>
