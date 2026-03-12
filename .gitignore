@@ -1,0 +1,30 @@
+# Node
+node_modules
+dist
+dist-ssr
+*.local
+
+# Editor
+.vscode/
+.idea
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Python
+backend/venv/
+backend/__pycache__/
+
+# Banco de dados
+backend/**/*.db
+backend/**/*.sqlite3
+
+# Planilhas
+backend/**/*.xlsx
+backend/**/*.xls
+
+# Sistema
+.DS_Store
+Thumbs.db
