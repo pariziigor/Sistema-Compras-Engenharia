@@ -1,5 +1,6 @@
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
 import sqlite3
 import pandas as pd
 import io
@@ -234,3 +235,54 @@ def calcular_necessidades_compras():
     conn.close()
     
     return necessidades
+
+@app.get("/api/compras/exportar")
+def exportar_relatorio_compras():
+    """
+    Gera um arquivo Excel com duas abas: Resumo de Compras e Detalhamento por Obra.
+    """
+    conn = get_db_connection()
+    
+    df_resumo = pd.read_sql_query('''
+        SELECT 
+            n.codigo_material as "Código",
+            m.descricao as "Descrição",
+            IFNULL(m.unidade_medida, '-') as "UN",
+            SUM(n.quantidade_pedida) as "Demanda (Obras)",
+            IFNULL(e.quantidade_estoque, 0) as "Estoque Atual",
+            IFNULL(e.quantidade_comprada, 0) as "Pedidos Colocados",
+            (SUM(n.quantidade_pedida) - (IFNULL(e.quantidade_estoque, 0) + IFNULL(e.quantidade_comprada, 0))) as "Comprar Agora"
+        FROM Necessidade_Projeto n
+        LEFT JOIN Materiais m ON n.codigo_material = m.codigo_material
+        LEFT JOIN Estoque_Compras e ON n.codigo_material = e.codigo_material
+        GROUP BY n.codigo_material
+        HAVING "Comprar Agora" > 0
+        ORDER BY "Comprar Agora" DESC
+    ''', conn)
+    
+    df_detalhe = pd.read_sql_query('''
+        SELECT 
+            n.codigo_projeto as "Projeto",
+            n.codigo_material as "Código",
+            m.descricao as "Descrição",
+            IFNULL(m.unidade_medida, '-') as "UN",
+            n.quantidade_pedida as "Quantidade Pedida"
+        FROM Necessidade_Projeto n
+        LEFT JOIN Materiais m ON n.codigo_material = m.codigo_material
+        ORDER BY n.codigo_projeto, m.descricao
+    ''', conn)
+    
+    conn.close()
+    
+    output = io.BytesIO()
+    with pd.ExcelWriter(output, engine='openpyxl') as writer:
+        df_resumo.to_excel(writer, sheet_name='Resumo de Compras', index=False)
+        df_detalhe.to_excel(writer, sheet_name='Detalhamento por Obra', index=False)
+        
+    output.seek(0)
+    
+    headers = {
+        'Content-Disposition': 'attachment; filename="Relatorio_Compras_Aulevi.xlsx"'
+    }
+    
+    return StreamingResponse(output, headers=headers, media_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
