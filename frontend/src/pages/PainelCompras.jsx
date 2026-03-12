@@ -38,7 +38,7 @@ export default function PainelCompras() {
                   <td className="p-4 font-medium">{item.codigo_material} - {item.descricao}</td>
                   <td className="p-4 text-center">{item.demanda_total_obras}</td>
                   <td className="p-4 text-center text-emerald-600">{item.estoque_atual}</td>
-                  <td className="p-4 text-center text-blue-600">{item.pedidos_colocados}</td>
+                  <td className="p-4 text-center text-orange-600">{item.pedidos_colocados}</td>
                   <td className="p-4 text-center font-bold text-red-600 bg-red-50/50">{item.necessidade_real_compra}</td>
                 </tr>
               ))

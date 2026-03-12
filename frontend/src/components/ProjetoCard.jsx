@@ -20,7 +20,7 @@ export default function ProjetoCard({ projeto, isExpanded, onToggle }) {
         <span className={`text-xs px-2 py-1 rounded-full font-medium ${
           projeto.status === 'Alterado' ? 'bg-yellow-100 text-yellow-800' : 
           projeto.status === 'Fechado' ? 'bg-slate-100 text-slate-600' : 
-          'bg-blue-100 text-blue-800'
+          'bg-orange-100 text-orange-800'
         }`}>
           {projeto.status} (v{projeto.versao})
         </span>
@@ -38,7 +38,7 @@ export default function ProjetoCard({ projeto, isExpanded, onToggle }) {
             {projeto.historico && projeto.historico.length > 0 ? (
               <ul className="space-y-3">
                 {projeto.historico.map((hist, idx) => (
-                  <li key={idx} className="text-sm border-l-2 border-blue-400 pl-3">
+                  <li key={idx} className="text-sm border-l-2 border-orange-400 pl-3">
                     <span className="text-xs text-slate-500 block">{new Date(hist.data_alteracao).toLocaleString('pt-BR')}</span>
                     <span className="text-slate-700">{hist.descricao_mudanca}</span>
                   </li>

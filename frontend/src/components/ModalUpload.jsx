@@ -53,7 +53,7 @@ export default function ModalUpload({ isOpen, onClose, onUploadSuccess }) {
         >
           <div className="px-6 py-4 border-b border-slate-200 flex justify-between items-center bg-slate-50">
             <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
-              <UploadCloud size={20} className="text-blue-600"/> Importar Dados
+              <UploadCloud size={20} className="text-orange-600"/> Importar Dados
             </h3>
             <button onClick={onClose} className="text-slate-400 hover:text-slate-600">
               <X size={20} />
@@ -67,11 +67,11 @@ export default function ModalUpload({ isOpen, onClose, onUploadSuccess }) {
               <h4 className="font-semibold text-slate-700 mb-1">Posição de Estoque (Suprimentos)</h4>
               <p className="text-xs text-slate-500 mb-3">Colunas: codigo_material, descricao, quantidade_estoque, quantidade_comprada</p>
               <div className="flex gap-2">
-                <input type="file" id="fileEstoque" accept=".xlsx, .xls" className="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer" />
+                <input type="file" id="fileEstoque" accept=".xlsx, .xls" className="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-orange-50 file:text-orange-700 hover:file:bg-orange-100 cursor-pointer" />
                 <button 
                   onClick={() => handleUpload('Estoque', '/upload/estoque', 'fileEstoque')}
                   disabled={status.loading}
-                  className="bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
+                  className="bg-orange-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-orange-700 disabled:opacity-50"
                 >
                   Enviar
                 </button>
@@ -98,7 +98,7 @@ export default function ModalUpload({ isOpen, onClose, onUploadSuccess }) {
               <div className={`p-4 rounded-md flex items-center gap-3 text-sm ${
                 status.tipo === 'sucesso' ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' :
                 status.tipo === 'erro' ? 'bg-red-50 text-red-800 border border-red-200' :
-                'bg-blue-50 text-blue-800 border border-blue-200'
+                'bg-orange-50 text-orange-800 border border-orange-200'
               }`}>
                 {status.loading && <Loader2 size={18} className="animate-spin" />}
                 {status.tipo === 'sucesso' && <CheckCircle size={18} />}
