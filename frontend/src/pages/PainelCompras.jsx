@@ -23,10 +23,10 @@ export default function PainelCompras() {
           <thead>
             <tr className="bg-slate-50 border-b border-slate-200">
               <th className="p-4 font-medium text-slate-600">Material</th>
-              <th className="p-4 font-medium text-slate-600">Demanda (Obras)</th>
-              <th className="p-4 font-medium text-slate-600">Estoque Atual</th>
-              <th className="p-4 font-medium text-slate-600">Pedidos Colocados</th>
-              <th className="p-4 font-bold text-red-600">Comprar Agora</th>
+              <th className="p-4 font-medium text-slate-600 text-center">Demanda (Obras)</th>
+              <th className="p-4 font-medium text-slate-600 text-center">Estoque Atual</th>
+              <th className="p-4 font-medium text-slate-600 text-center">Pedidos Colocados</th>
+              <th className="p-4 font-bold text-red-600 text-center">Comprar Agora</th>
             </tr>
           </thead>
           <tbody>
@@ -36,10 +36,10 @@ export default function PainelCompras() {
               necessidades.map((item, index) => (
                 <tr key={index} className="border-b border-slate-100 hover:bg-slate-50">
                   <td className="p-4 font-medium">{item.codigo_material} - {item.descricao}</td>
-                  <td className="p-4">{item.demanda_total_obras}</td>
-                  <td className="p-4 text-emerald-600">{item.estoque_atual}</td>
-                  <td className="p-4 text-blue-600">{item.pedidos_colocados}</td>
-                  <td className="p-4 font-bold text-red-600 bg-red-50/50">{item.necessidade_real_compra}</td>
+                  <td className="p-4 text-center">{item.demanda_total_obras}</td>
+                  <td className="p-4 text-center text-emerald-600">{item.estoque_atual}</td>
+                  <td className="p-4 text-center text-blue-600">{item.pedidos_colocados}</td>
+                  <td className="p-4 text-center font-bold text-red-600 bg-red-50/50">{item.necessidade_real_compra}</td>
                 </tr>
               ))
             )}
