@@ -1,29 +1,27 @@
 # Node
-node_modules
-dist
-dist-ssr
+node_modules/
+dist/
+dist-ssr/
 *.local
 
-# Editor
-.vscode/
-.idea
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
+# React
+frontend/node_modules/
 
 # Python
 backend/venv/
 backend/__pycache__/
 
-# Banco de dados
-backend/**/*.db
-backend/**/*.sqlite3
+# Banco
+*.db
+*.sqlite3
 
 # Planilhas
-backend/**/*.xlsx
-backend/**/*.xls
+*.xlsx
+*.xls
+
+# IDE
+.vscode/
+.idea/
 
 # Sistema
 .DS_Store
