@@ -46,7 +46,6 @@ export default function PainelCompras() {
         <table className="w-full text-left border-collapse">
           <thead>
             <tr className="bg-slate-50 border-b border-slate-200">
-              {/* Colunas separadas agora */}
               <th className="p-4 font-medium text-slate-600 w-32">Código</th>
               <th className="p-4 font-medium text-slate-600">Descrição do Material</th>
               <th className="p-4 font-medium text-slate-600 text-center">Demanda (Obras)</th>
@@ -65,7 +64,6 @@ export default function PainelCompras() {
             ) : (
               necessidadesFiltradas.map((item, index) => (
                 <tr key={index} className="border-b border-slate-100 hover:bg-slate-50">
-                  {/* Dados separados em duas colunas */}
                   <td className="p-4 font-mono text-sm text-slate-500">{item.codigo_material}</td>
                   <td className="p-4 font-medium text-slate-800">{item.descricao}</td>
                   
